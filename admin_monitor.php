@@ -19,6 +19,103 @@ if ($auth_result !== true) {
 $msg = '';
 $msg_type = 'success';
 
+// 添加到黑名单功能
+if (isset($_POST['add_to_blacklist'])) {
+    $ip = trim($_POST['ip'] ?? '');
+    $ua = trim($_POST['ua'] ?? '');
+    $type = $_POST['type'] ?? '';
+
+    if ($type === 'ip' && !empty($ip)) {
+        // 添加IP到黑名单
+        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+            // 检查IP是否已存在
+            $existing_ips = file_exists($config['ip_file']) ?
+                file($config['ip_file'], FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
+
+            if (!in_array($ip, $existing_ips)) {
+                file_put_contents($config['ip_file'], $ip . "\n", FILE_APPEND | LOCK_EX);
+                $msg = "✅ IP地址 {$ip} 已添加到黑名单";
+            } else {
+                $msg = "⚠️ IP地址 {$ip} 已存在于黑名单中";
+                $msg_type = 'error';
+            }
+        } else {
+            $msg = "❌ 无效的IP地址格式";
+            $msg_type = 'error';
+        }
+    } elseif ($type === 'ua' && !empty($ua)) {
+        // 添加UA到黑名单
+        $existing_uas = file_exists($config['ua_file']) ?
+            file($config['ua_file'], FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
+
+        if (!in_array($ua, $existing_uas)) {
+            file_put_contents($config['ua_file'], $ua . "\n", FILE_APPEND | LOCK_EX);
+            $msg = "✅ User Agent 已添加到黑名单";
+        } else {
+            $msg = "⚠️ 该 User Agent 已存在于黑名单中";
+            $msg_type = 'error';
+        }
+    } else {
+        $msg = "❌ 参数错误";
+        $msg_type = 'error';
+    }
+}
+
+// 从黑名单移除功能
+if (isset($_POST['remove_from_blacklist'])) {
+    $ip = trim($_POST['ip'] ?? '');
+    $ua = trim($_POST['ua'] ?? '');
+    $type = $_POST['type'] ?? '';
+
+    if ($type === 'ip' && !empty($ip)) {
+        // 从IP黑名单移除
+        if (file_exists($config['ip_file'])) {
+            $existing_ips = file($config['ip_file'], FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $filtered_ips = array_filter($existing_ips, function($line) use ($ip) {
+                return trim($line) !== $ip;
+            });
+
+            if (count($filtered_ips) < count($existing_ips)) {
+                file_put_contents($config['ip_file'], implode("\n", $filtered_ips) . "\n");
+                $msg = "✅ IP地址 {$ip} 已从黑名单移除";
+            } else {
+                $msg = "⚠️ IP地址 {$ip} 不在黑名单中";
+                $msg_type = 'error';
+            }
+        } else {
+            $msg = "❌ IP黑名单文件不存在";
+            $msg_type = 'error';
+        }
+    } elseif ($type === 'ua' && !empty($ua)) {
+        // 从UA黑名单移除
+        if (file_exists($config['ua_file'])) {
+            $existing_uas = file($config['ua_file'], FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $filtered_uas = array_filter($existing_uas, function($line) use ($ua) {
+                // 处理混合格式，只比较UA部分
+                $line_ua = trim($line);
+                if (preg_match('/^(.+?)\s*\[ip:([^\]]+)\]$/', $line_ua, $matches)) {
+                    $line_ua = trim($matches[1]);
+                }
+                return $line_ua !== $ua;
+            });
+
+            if (count($filtered_uas) < count($existing_uas)) {
+                file_put_contents($config['ua_file'], implode("\n", $filtered_uas) . "\n");
+                $msg = "✅ User Agent 已从黑名单移除";
+            } else {
+                $msg = "⚠️ 该 User Agent 不在黑名单中";
+                $msg_type = 'error';
+            }
+        } else {
+            $msg = "❌ UA黑名单文件不存在";
+            $msg_type = 'error';
+        }
+    } else {
+        $msg = "❌ 参数错误";
+        $msg_type = 'error';
+    }
+}
+
 // 清空日志
 if (isset($_GET['clear_log'])) {
     file_put_contents($config['log_file'], '');
@@ -140,10 +237,73 @@ function getLogStats($log_file) {
     ];
 }
 
+// 检查IP是否在黑名单中（使用与index.php相同的逻辑）
+function isIPInBlacklist($ip, $config) {
+    // 检查独立IP文件
+    if (file_exists($config['ip_file'])) {
+        $ip_list = file($config['ip_file'], FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (in_array($ip, array_map('trim', $ip_list))) {
+            return true;
+        }
+    }
+
+    // 检查UA文件中的IP
+    if (file_exists($config['ua_file'])) {
+        $ua_lines = file($config['ua_file'], FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($ua_lines as $line) {
+            if (preg_match('/\[ip:([^\]]+)\]$/', trim($line), $matches)) {
+                if (trim($matches[1]) === $ip) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    // 检查云服务器IP前缀（与index.php保持一致）
+    $cloud_ip_prefix = ['34.', '35.', '66.249.', '104.28.', '54.'];
+    foreach ($cloud_ip_prefix as $prefix) {
+        if (strpos($ip, $prefix) === 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// 检查UA是否在黑名单中（使用与index.php相同的逻辑）
+function isUAInBlacklist($ua, $config) {
+    if (!file_exists($config['ua_file'])) {
+        return false;
+    }
+
+    // 转换为小写进行比较（与index.php保持一致）
+    $ua_lower = strtolower($ua);
+
+    $ua_lines = file($config['ua_file'], FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($ua_lines as $line) {
+        $line = trim($line);
+        if (empty($line)) continue;
+
+        // 处理混合格式，提取UA部分
+        if (preg_match('/^(.+?)\s*\[ip:([^\]]+)\]$/', $line, $matches)) {
+            $line_ua = strtolower(trim($matches[1]));
+        } else {
+            $line_ua = strtolower($line);
+        }
+
+        // 检查是否匹配（使用strpos进行部分匹配，与index.php保持一致）
+        if (!empty($line_ua) && strpos($ua_lower, $line_ua) !== false) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // 获取系统信息
 function getSystemInfo($config) {
     $info = [];
-    
+
     // 文件状态
     $files = [
         'UA 黑名单' => $config['ua_file'],
@@ -152,7 +312,7 @@ function getSystemInfo($config) {
         '访问日志' => $config['log_file'],
         'API 配置' => $config['api_config_file']
     ];
-    
+
     foreach ($files as $name => $file) {
         $info['files'][$name] = [
             'exists' => file_exists($file),
@@ -160,11 +320,11 @@ function getSystemInfo($config) {
             'modified' => file_exists($file) ? date('Y-m-d H:i:s', filemtime($file)) : '-'
         ];
     }
-    
+
     // 黑名单统计
     $stats = getBlacklistStats($config);
     $info['blacklist'] = $stats;
-    
+
     return $info;
 }
 
@@ -283,6 +443,68 @@ $system_info = getSystemInfo($config);
         
         .status-ok { color: #27ae60; }
         .status-error { color: #e74c3c; }
+
+        /* 黑名单操作按钮样式 */
+        .blacklist-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            margin: 2px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+
+        .blacklist-btn-add {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .blacklist-btn-add:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        .blacklist-btn-remove {
+            background: #27ae60;
+            color: white;
+        }
+
+        .blacklist-btn-remove:hover {
+            background: #229954;
+            transform: translateY(-1px);
+        }
+
+        .blacklist-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .blacklist-status {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 1px;
+            display: inline-block;
+        }
+
+        .blacklist-status-in {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .blacklist-status-out {
+            background: rgba(39, 174, 96, 0.2);
+            color: #27ae60;
+        }
+
+        .action-column {
+            min-width: 120px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -395,6 +617,7 @@ $system_info = getSystemInfo($config);
                             <th>User Agent</th>
                             <th>处理结果</th>
                             <th>访问来源</th>
+                            <th>黑名单操作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -406,6 +629,10 @@ $system_info = getSystemInfo($config);
                                          strpos($log['action'], '测试模式') !== false);
                             $row_class = $is_blocked ? 'blocked' : 'passed';
                             $action_class = $is_blocked ? 'action-blocked' : 'action-redirect';
+
+                            // 检查是否在黑名单中
+                            $ip_in_blacklist = isIPInBlacklist($log['ip'], $config);
+                            $ua_in_blacklist = isUAInBlacklist($log['ua'], $config);
                         ?>
                         <tr class="<?php echo $row_class; ?>">
                             <td><?php echo htmlspecialchars($log['time']); ?></td>
@@ -436,6 +663,74 @@ $system_info = getSystemInfo($config);
                                     echo '<span title="' . htmlspecialchars($referer) . '">' . htmlspecialchars($display_referer) . '</span>';
                                 }
                                 ?>
+                            </td>
+                            <td class="action-column">
+                                <!-- IP 操作 -->
+                                <div style="margin-bottom: 5px;">
+                                    <?php if ($ip_in_blacklist): ?>
+                                        <span class="blacklist-status blacklist-status-in" title="此IP已在黑名单中">IP已拉黑</span>
+                                        <form method="post" style="display: inline;">
+                                            <input type="hidden" name="ip" value="<?php echo htmlspecialchars($log['ip']); ?>">
+                                            <input type="hidden" name="type" value="ip">
+                                            <button type="submit" name="remove_from_blacklist" class="blacklist-btn blacklist-btn-remove"
+                                                    onclick="return confirm('确定要将此IP从黑名单移除吗？')">
+                                                ✅ 移除IP
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <?php
+                                        // 检查是否是云服务器IP
+                                        $is_cloud_ip = false;
+                                        $cloud_ip_prefix = ['34.', '35.', '66.249.', '104.28.', '54.'];
+                                        foreach ($cloud_ip_prefix as $prefix) {
+                                            if (strpos($log['ip'], $prefix) === 0) {
+                                                $is_cloud_ip = true;
+                                                break;
+                                            }
+                                        }
+
+                                        if ($is_cloud_ip):
+                                        ?>
+                                            <span class="blacklist-status blacklist-status-in" title="此IP属于云服务器IP前缀，系统自动拦截">云服务IP</span>
+                                        <?php else: ?>
+                                            <span class="blacklist-status blacklist-status-out">IP未拉黑</span>
+                                        <?php endif; ?>
+
+                                        <form method="post" style="display: inline;">
+                                            <input type="hidden" name="ip" value="<?php echo htmlspecialchars($log['ip']); ?>">
+                                            <input type="hidden" name="type" value="ip">
+                                            <button type="submit" name="add_to_blacklist" class="blacklist-btn blacklist-btn-add"
+                                                    onclick="return confirm('确定要将此IP添加到黑名单吗？')">
+                                                🚫 拉黑IP
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
+
+                                <!-- UA 操作 -->
+                                <div>
+                                    <?php if ($ua_in_blacklist): ?>
+                                        <span class="blacklist-status blacklist-status-in" title="此UA已在黑名单中">UA已拉黑</span>
+                                        <form method="post" style="display: inline;">
+                                            <input type="hidden" name="ua" value="<?php echo htmlspecialchars($log['ua']); ?>">
+                                            <input type="hidden" name="type" value="ua">
+                                            <button type="submit" name="remove_from_blacklist" class="blacklist-btn blacklist-btn-remove"
+                                                    onclick="return confirm('确定要将此UA从黑名单移除吗？')">
+                                                ✅ 移除UA
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="blacklist-status blacklist-status-out">UA未拉黑</span>
+                                        <form method="post" style="display: inline;">
+                                            <input type="hidden" name="ua" value="<?php echo htmlspecialchars($log['ua']); ?>">
+                                            <input type="hidden" name="type" value="ua">
+                                            <button type="submit" name="add_to_blacklist" class="blacklist-btn blacklist-btn-add"
+                                                    onclick="return confirm('确定要将此UA添加到黑名单吗？')">
+                                                🚫 拉黑UA
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                         <?php endforeach; ?>
