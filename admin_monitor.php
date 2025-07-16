@@ -804,7 +804,7 @@ $system_info = getSystemInfo($config);
                         <label>&nbsp;</label>
                         <div style="display: flex; gap: 8px; height: 28px; align-items: center;">
                             <button type="submit" class="btn btn-primary" style="margin: 0; padding: 5px 12px; height: 28px;">应用过滤</button>
-                            <a href="?page=1" class="btn" style="margin: 0; background: #00FF7F; padding: 5px 12px; text-decoration: none; height: 28px; display: flex; align-items: center; color:rgb(255, 255, 255);">重置</a>
+                            <a href="?page=1" class="btn" style="margin: 0; background:rgb(0, 156, 78); padding: 5px 12px; text-decoration: none; height: 28px; display: flex; align-items: center; color:rgb(255, 255, 255);">重置</a>
                         </div>
                     </div>
                 </div>
