@@ -191,23 +191,52 @@ $system_info = getSystemInfo($config);
         .log-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 10px;
             font-size: 13px;
         }
-        
+
         .log-table th, .log-table td {
-            padding: 8px 12px;
+            padding: 8px 10px;
             border: 1px solid #ddd;
             text-align: left;
+            vertical-align: middle;
         }
-        
+
         .log-table th {
             background: #f8f9fa;
             font-weight: 600;
+            font-size: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
-        
+
         .log-table tr:nth-child(even) {
             background: #f8f9fa;
+        }
+
+        .log-table td:first-child {
+            text-align: center;
+            width: 35px;
+        }
+
+        .log-table td:nth-child(2) {
+            font-size: 12px;
+            width: 130px;
+        }
+
+        .log-table td:nth-child(3) {
+            font-family: monospace;
+            font-size: 12px;
+            width: 110px;
+        }
+
+        .log-table td:nth-child(4) {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
         }
 
         /* 被拦截的行 - 红色背景 */
@@ -289,6 +318,8 @@ $system_info = getSystemInfo($config);
             text-decoration: none;
             display: inline-block;
             transition: all 0.2s ease;
+            white-space: nowrap;
+            font-weight: 500;
         }
 
         .blacklist-btn-add {
@@ -321,8 +352,10 @@ $system_info = getSystemInfo($config);
             font-size: 10px;
             padding: 2px 6px;
             border-radius: 3px;
-            margin: 1px;
+            margin: 2px;
             display: inline-block;
+            white-space: nowrap;
+            font-weight: 500;
         }
 
         .blacklist-status-in {
@@ -336,8 +369,111 @@ $system_info = getSystemInfo($config);
         }
 
         .action-column {
-            min-width: 120px;
+            min-width: 180px;
             text-align: center;
+            vertical-align: top;
+            padding: 10px 6px !important;
+        }
+
+        /* 操作行样式 - 改为水平布局 */
+        .action-row {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: center;
+            justify-content: center;
+            min-width: 85px;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .action-group .blacklist-status {
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        /* 特殊按钮样式 */
+        .btn-both {
+            background: #f39c12 !important;
+            color: white !important;
+            font-weight: bold !important;
+            border: 1px solid #e67e22 !important;
+            padding: 4px 8px !important;
+        }
+
+        .btn-both:hover {
+            background: #e67e22 !important;
+            transform: translateY(-1px);
+        }
+
+        /* 表格行悬停效果 */
+        .log-table tbody tr:hover {
+            background: rgba(52, 152, 219, 0.05) !important;
+        }
+
+        /* 改进的状态标签 */
+        .blacklist-status {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 2px;
+            display: inline-block;
+            white-space: nowrap;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* 操作列标题样式 */
+        .log-table th:last-child {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-weight: 700;
+            color: #495057;
+        }
+
+        /* 特殊按钮样式 */
+        .btn-both {
+            background: #f39c12 !important;
+            color: white !important;
+            font-weight: bold !important;
+            border: 2px solid #e67e22 !important;
+        }
+
+        .btn-both:hover {
+            background: #e67e22 !important;
+            transform: translateY(-1px);
+        }
+
+        /* 紧凑型按钮组 */
+        .btn-group-compact {
+            display: flex;
+            gap: 1px;
+        }
+
+        .btn-group-compact .blacklist-btn {
+            margin: 0;
+            border-radius: 0;
+        }
+
+        .btn-group-compact .blacklist-btn:first-child {
+            border-radius: 3px 0 0 3px;
+        }
+
+        .btn-group-compact .blacklist-btn:last-child {
+            border-radius: 0 3px 3px 0;
+        }
+
+        .btn-group-compact .blacklist-btn:only-child {
+            border-radius: 3px;
         }
 
         /* 多选和批量操作样式 */
@@ -356,18 +492,22 @@ $system_info = getSystemInfo($config);
 
         .batch-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
             margin-top: 10px;
+            justify-content: flex-start;
+            align-items: center;
         }
 
         .batch-btn {
-            padding: 8px 16px;
+            padding: 6px 12px;
             border: none;
-            border-radius: 5px;
-            font-size: 13px;
+            border-radius: 4px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
+            white-space: nowrap;
+            font-weight: 500;
         }
 
         .batch-btn-danger {
@@ -380,15 +520,17 @@ $system_info = getSystemInfo($config);
             color: white;
         }
 
-        .batch-btn:hover {
+        .batch-btn:hover:not(:disabled) {
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .batch-btn:disabled {
             background: #bdc3c7;
+            color: #7f8c8d;
             cursor: not-allowed;
             transform: none;
+            opacity: 0.6;
         }
 
         .select-all-checkbox {
@@ -398,36 +540,46 @@ $system_info = getSystemInfo($config);
         /* 过滤器样式 */
         .filters {
             background: rgba(155,89,182,0.1);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
             border: 1px solid rgba(155,89,182,0.3);
         }
 
         .filter-row {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             flex-wrap: wrap;
-            align-items: center;
+            align-items: flex-end;
         }
 
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 3px;
+            min-width: 120px;
         }
 
         .filter-group label {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
             font-weight: 600;
+            margin-bottom: 2px;
         }
 
         .filter-group input, .filter-group select {
-            padding: 6px 10px;
+            padding: 5px 8px;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
+            border-radius: 3px;
+            font-size: 12px;
+            height: 28px;
+            box-sizing: border-box;
+        }
+
+        .filter-group input:focus, .filter-group select:focus {
+            outline: none;
+            border-color: #9b59b6;
+            box-shadow: 0 0 0 2px rgba(155,89,182,0.2);
         }
 
         /* 分页样式 */
@@ -460,6 +612,76 @@ $system_info = getSystemInfo($config);
         .pagination .disabled {
             color: #999;
             cursor: not-allowed;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .batch-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .batch-btn {
+                margin-bottom: 5px;
+            }
+
+            .action-column {
+                min-width: 160px;
+            }
+
+            .action-row {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .action-group {
+                min-width: 100%;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            .log-table {
+                font-size: 12px;
+            }
+
+            .log-table th, .log-table td {
+                padding: 6px 4px;
+            }
+
+            .blacklist-btn {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-row {
+                gap: 2px;
+            }
+
+            .action-group {
+                flex-direction: column;
+                gap: 1px;
+            }
+
+            .blacklist-status {
+                font-size: 8px;
+                padding: 1px 3px;
+            }
         }
     </style>
 </head>
@@ -579,8 +801,11 @@ $system_info = getSystemInfo($config);
                         </select>
                     </div>
                     <div class="filter-group" style="align-self: flex-end;">
-                        <button type="submit" class="btn btn-primary" style="margin: 0;">应用过滤</button>
-                        <a href="?page=1" class="btn" style="margin: 0; background: #eee;">重置</a>
+                        <label>&nbsp;</label>
+                        <div style="display: flex; gap: 8px; height: 28px; align-items: center;">
+                            <button type="submit" class="btn btn-primary" style="margin: 0; padding: 5px 12px; height: 28px;">应用过滤</button>
+                            <a href="?page=1" class="btn" style="margin: 0; background: #00FF7F; padding: 5px 12px; text-decoration: none; height: 28px; display: flex; align-items: center; color:rgb(255, 255, 255);">重置</a>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -609,23 +834,28 @@ $system_info = getSystemInfo($config);
             <!-- 批量操作控制区 -->
             <form method="post" id="batch-form">
                 <div class="batch-controls">
-                    <h4>🔄 批量操作</h4>
-                    <div style="font-size: 13px; color: #666; margin-bottom: 10px;">
-                        选择下方日志条目，然后点击相应按钮进行批量操作
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h4 style="margin: 0;">🔄 批量操作</h4>
+                        <div style="font-size: 11px; color: #666;">
+                            选择条目后点击按钮进行批量操作
+                        </div>
                     </div>
                     <div class="batch-buttons">
                         <button type="submit" name="batch_add_to_blacklist" value="ip" class="batch-btn batch-btn-danger"
-                                onclick="return confirmBatchAction('IP')">
-                            🚫 批量拉黑选中IP
+                                onclick="return confirmBatchAction('IP')" disabled>
+                            🚫 批量拉黑IP
                         </button>
                         <button type="submit" name="batch_add_to_blacklist" value="ua" class="batch-btn batch-btn-danger"
-                                onclick="return confirmBatchAction('UA')">
-                            🚫 批量拉黑选中UA
+                                onclick="return confirmBatchAction('UA')" disabled>
+                            🚫 批量拉黑UA
                         </button>
                         <button type="submit" name="batch_add_to_blacklist" value="both" class="batch-btn batch-btn-warning"
-                                onclick="return confirmBatchAction('IP和UA')">
-                            ⚡ 同时拉黑选中IP+UA
+                                onclick="return confirmBatchAction('IP和UA')" disabled>
+                            ⚡ 同时拉黑IP+UA
                         </button>
+                        <span style="font-size: 11px; color: #999; margin-left: 10px;" id="selection-count">
+                            未选择任何项目
+                        </span>
                     </div>
                     <input type="hidden" name="batch_type" id="batch_type" value="">
                 </div>
@@ -696,88 +926,86 @@ $system_info = getSystemInfo($config);
                                     ?>
                                 </td>
                                 <td class="action-column">
-                                    <!-- IP 操作 -->
-                                    <div style="margin-bottom: 5px;">
-                                        <?php if ($ip_in_blacklist): ?>
-                                            <span class="blacklist-status blacklist-status-in" title="此IP已在黑名单中">IP已拉黑</span>
-                                            <form method="post" style="display: inline;">
-                                                <input type="hidden" name="ip" value="<?php echo htmlspecialchars($log['ip']); ?>">
-                                                <input type="hidden" name="type" value="ip">
-                                                <button type="submit" name="remove_from_blacklist" class="blacklist-btn blacklist-btn-remove"
-                                                        onclick="return confirm('确定要将此IP从黑名单移除吗？')">
-                                                    ✅ 移除IP
-                                                </button>
-                                            </form>
-                                        <?php else: ?>
-                                            <?php
-                                            // 检查是否是云服务器IP
-                                            $is_cloud_ip = false;
-                                            $cloud_ip_prefix = ['34.', '35.', '66.249.', '104.28.', '54.'];
-                                            foreach ($cloud_ip_prefix as $prefix) {
-                                                if (strpos($log['ip'], $prefix) === 0) {
-                                                    $is_cloud_ip = true;
-                                                    break;
-                                                }
+                                    <div class="action-row">
+                                        <?php
+                                        // 检查是否是云服务器IP
+                                        $is_cloud_ip = false;
+                                        $cloud_ip_prefix = ['34.', '35.', '66.249.', '104.28.', '54.'];
+                                        foreach ($cloud_ip_prefix as $prefix) {
+                                            if (strpos($log['ip'], $prefix) === 0) {
+                                                $is_cloud_ip = true;
+                                                break;
                                             }
+                                        }
+                                        ?>
 
-                                            if ($is_cloud_ip):
-                                            ?>
+                                        <!-- IP 操作行 -->
+                                        <div class="action-group">
+                                            <?php if ($ip_in_blacklist): ?>
+                                                <span class="blacklist-status blacklist-status-in" title="此IP已在黑名单中">IP已拉黑</span>
+                                                <form method="post" style="display: inline;">
+                                                    <input type="hidden" name="ip" value="<?php echo htmlspecialchars($log['ip']); ?>">
+                                                    <input type="hidden" name="type" value="ip">
+                                                    <button type="submit" name="remove_from_blacklist" class="blacklist-btn blacklist-btn-remove"
+                                                            onclick="return confirm('确定要将此IP从黑名单移除吗？')">
+                                                        ✅移除
+                                                    </button>
+                                                </form>
+                                            <?php elseif ($is_cloud_ip): ?>
                                                 <span class="blacklist-status blacklist-status-in" title="此IP属于云服务器IP前缀，系统自动拦截">云服务IP</span>
                                             <?php else: ?>
                                                 <span class="blacklist-status blacklist-status-out">IP未拉黑</span>
+                                                <form method="post" style="display: inline;">
+                                                    <input type="hidden" name="ip" value="<?php echo htmlspecialchars($log['ip']); ?>">
+                                                    <input type="hidden" name="type" value="ip">
+                                                    <button type="submit" name="add_to_blacklist" class="blacklist-btn blacklist-btn-add"
+                                                            onclick="return confirm('确定要将此IP添加到黑名单吗？')">
+                                                        🚫拉黑
+                                                    </button>
+                                                </form>
                                             <?php endif; ?>
+                                        </div>
 
+                                        <!-- UA 操作行 -->
+                                        <div class="action-group">
+                                            <?php if ($ua_in_blacklist): ?>
+                                                <span class="blacklist-status blacklist-status-in" title="此UA已在黑名单中">UA已拉黑</span>
+                                                <form method="post" style="display: inline;">
+                                                    <input type="hidden" name="ua" value="<?php echo htmlspecialchars($log['ua']); ?>">
+                                                    <input type="hidden" name="type" value="ua">
+                                                    <button type="submit" name="remove_from_blacklist" class="blacklist-btn blacklist-btn-remove"
+                                                            onclick="return confirm('确定要将此UA从黑名单移除吗？')">
+                                                        ✅移除
+                                                    </button>
+                                                </form>
+                                            <?php else: ?>
+                                                <span class="blacklist-status blacklist-status-out">UA未拉黑</span>
+                                                <form method="post" style="display: inline;">
+                                                    <input type="hidden" name="ua" value="<?php echo htmlspecialchars($log['ua']); ?>">
+                                                    <input type="hidden" name="type" value="ua">
+                                                    <button type="submit" name="add_to_blacklist" class="blacklist-btn blacklist-btn-add"
+                                                            onclick="return confirm('确定要将此UA添加到黑名单吗？')">
+                                                        🚫拉黑
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </div>
+
+                                        <!-- 同时拉黑按钮 -->
+                                        <?php if (!$ip_in_blacklist && !$ua_in_blacklist && !$is_cloud_ip): ?>
+                                        <div class="action-group">
                                             <form method="post" style="display: inline;">
                                                 <input type="hidden" name="ip" value="<?php echo htmlspecialchars($log['ip']); ?>">
-                                                <input type="hidden" name="type" value="ip">
-                                                <button type="submit" name="add_to_blacklist" class="blacklist-btn blacklist-btn-add"
-                                                        onclick="return confirm('确定要将此IP添加到黑名单吗？')">
-                                                    🚫 拉黑IP
+                                                <input type="hidden" name="ua" value="<?php echo htmlspecialchars($log['ua']); ?>">
+                                                <input type="hidden" name="type" value="both">
+                                                <button type="submit" name="add_to_blacklist" class="blacklist-btn btn-both"
+                                                        onclick="return confirm('确定要同时将此IP和UA添加到黑名单吗？')">
+                                                    ⚡同时拉黑
                                                 </button>
                                             </form>
+                                        </div>
                                         <?php endif; ?>
                                     </div>
-
-                                    <!-- UA 操作 -->
-                                    <div>
-                                        <?php if ($ua_in_blacklist): ?>
-                                            <span class="blacklist-status blacklist-status-in" title="此UA已在黑名单中">UA已拉黑</span>
-                                            <form method="post" style="display: inline;">
-                                                <input type="hidden" name="ua" value="<?php echo htmlspecialchars($log['ua']); ?>">
-                                                <input type="hidden" name="type" value="ua">
-                                                <button type="submit" name="remove_from_blacklist" class="blacklist-btn blacklist-btn-remove"
-                                                        onclick="return confirm('确定要将此UA从黑名单移除吗？')">
-                                                    ✅ 移除UA
-                                                </button>
-                                            </form>
-                                        <?php else: ?>
-                                            <span class="blacklist-status blacklist-status-out">UA未拉黑</span>
-                                            <form method="post" style="display: inline;">
-                                                <input type="hidden" name="ua" value="<?php echo htmlspecialchars($log['ua']); ?>">
-                                                <input type="hidden" name="type" value="ua">
-                                                <button type="submit" name="add_to_blacklist" class="blacklist-btn blacklist-btn-add"
-                                                        onclick="return confirm('确定要将此UA添加到黑名单吗？')">
-                                                    🚫 拉黑UA
-                                                </button>
-                                            </form>
-                                        <?php endif; ?>
-                                    </div>
-
-                                    <!-- 同时拉黑IP+UA按钮 -->
-                                    <?php if (!$ip_in_blacklist && !$ua_in_blacklist): ?>
-                                    <div style="margin-top: 5px;">
-                                        <form method="post" style="display: inline;">
-                                            <input type="hidden" name="ip" value="<?php echo htmlspecialchars($log['ip']); ?>">
-                                            <input type="hidden" name="ua" value="<?php echo htmlspecialchars($log['ua']); ?>">
-                                            <input type="hidden" name="type" value="both">
-                                            <button type="submit" name="add_to_blacklist" class="blacklist-btn"
-                                                    style="background: #f39c12; color: white;"
-                                                    onclick="return confirm('确定要同时将此IP和UA添加到黑名单吗？')">
-                                                ⚡ IP+UA
-                                            </button>
-                                        </form>
-                                    </div>
-                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -869,17 +1097,23 @@ function toggleSelectAll(selectAllCheckbox) {
 function updateBatchButtons() {
     const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
     const batchButtons = document.querySelectorAll('.batch-btn');
+    const selectionCount = document.getElementById('selection-count');
+
+    const isDisabled = checkedBoxes.length === 0;
 
     batchButtons.forEach(button => {
-        button.disabled = checkedBoxes.length === 0;
+        button.disabled = isDisabled;
     });
 
     // 更新选中数量显示
-    const batchControls = document.querySelector('.batch-controls h4');
     if (checkedBoxes.length > 0) {
-        batchControls.textContent = `🔄 批量操作 (已选择 ${checkedBoxes.length} 项)`;
+        selectionCount.textContent = `已选择 ${checkedBoxes.length} 项`;
+        selectionCount.style.color = '#27ae60';
+        selectionCount.style.fontWeight = '600';
     } else {
-        batchControls.textContent = '🔄 批量操作';
+        selectionCount.textContent = '未选择任何项目';
+        selectionCount.style.color = '#999';
+        selectionCount.style.fontWeight = 'normal';
     }
 }
 
