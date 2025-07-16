@@ -23,7 +23,8 @@ release
 *.njsproj
 *.sln
 *.sw?
-real_landing_url.txt
-ua_blacklist.txt
-admin备份.php
-log.txt
+real_landing_url.txt*
+ua_blacklist.txt*
+admin备份.php*
+log.txt*
+api_config.json*
