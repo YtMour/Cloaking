@@ -204,7 +204,7 @@
 
 <div class="main-container">
     <div class="header">
-        <h2>🎯 跳转地址后台管理</h2>
+        <h2>斗篷系统后台管理</h2>
         <a href="Cloak_admin.php?action=logout" class="logout-btn">🚪 退出后台</a>
         <div class="nav-menu">
             <a href="Cloak_admin.php" class="nav-btn <?php echo ($module ?? '') === 'dashboard' ? 'active' : ''; ?>">📊 仪表板</a>
