@@ -1,0 +1,54 @@
+# Cloak系统安全配置
+
+# 禁止访问数据目录
+<Directory "Cloak_Data">
+    Require all denied
+</Directory>
+
+# 禁止访问核心目录
+<Directory "Cloak_Core">
+    Require all denied
+</Directory>
+
+# 禁止访问工具目录
+<Directory "Cloak_Tools">
+    Require all denied
+</Directory>
+
+# 禁止访问监控目录
+<Directory "Cloak_Monitor">
+    Require all denied
+</Directory>
+
+# 禁止访问API目录
+<Directory "Cloak_API">
+    Require all denied
+</Directory>
+
+# 禁止访问备份目录
+<Directory "Cloak_Backup">
+    Require all denied
+</Directory>
+
+# 禁止访问管理目录
+<Directory "Cloak_Admin">
+    Require all denied
+</Directory>
+
+# 禁止直接访问PHP文件（除了入口文件）
+<FilesMatch "^(?!Cloak_index\.php|Cloak_admin\.php).*\.php$">
+    Require all denied
+</FilesMatch>
+
+# 禁止访问配置文件
+<FilesMatch "\.(txt|json|log|md)$">
+    Require all denied
+</FilesMatch>
+
+# 启用压缩
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/javascript
+</IfModule>

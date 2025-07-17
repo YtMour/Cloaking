@@ -28,3 +28,4 @@ ua_blacklist.txt*
 admin备份.php*
 log.txt*
 api_config.json*
+back/*

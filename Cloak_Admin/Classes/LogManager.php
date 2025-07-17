@@ -19,7 +19,9 @@ class LogManager {
      * @return array 包含日志数据和分页信息
      */
     public function getLogData($page = 1, $per_page = 50, $filters = []) {
-        if (!file_exists($this->config['log_file'])) {
+        $log_file = $this->config['log_file'] ?? '../access.log';
+        
+        if (!file_exists($log_file)) {
             return [
                 'logs' => [],
                 'total' => 0,
@@ -29,7 +31,7 @@ class LogManager {
             ];
         }
 
-        $lines = file($this->config['log_file'], FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $lines = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $logs = [];
 
         // 解析日志行
@@ -102,22 +104,25 @@ class LogManager {
         // 动作过滤
         if (!empty($filters['action'])) {
             if ($filters['action'] === 'blocked') {
-                if (strpos($log['action'], '假页面') === false && 
-                    strpos($log['action'], 'BLOCKED') === false &&
-                    strpos($log['action'], '机器人检测') === false &&
-                    strpos($log['action'], '测试模式') === false) {
+                if (stripos($log['action'], '假页面') === false && 
+                    stripos($log['action'], 'BLOCKED') === false &&
+                    stripos($log['action'], '机器人检测') === false &&
+                    stripos($log['action'], '测试模式') === false) {
                     return false;
                 }
             } elseif ($filters['action'] === 'passed') {
-                if (strpos($log['action'], '正常跳转') === false) {
+                if (stripos($log['action'], '假页面') !== false || 
+                    stripos($log['action'], 'BLOCKED') !== false ||
+                    stripos($log['action'], '机器人检测') !== false ||
+                    stripos($log['action'], '测试模式') !== false) {
                     return false;
                 }
             }
         }
         
-        // 时间过滤
+        // 日期过滤
         if (!empty($filters['date'])) {
-            if (strpos($log['time'], $filters['date']) !== 0) {
+            if (stripos($log['time'], $filters['date']) === false) {
                 return false;
             }
         }
@@ -129,7 +134,9 @@ class LogManager {
      * 获取日志统计信息
      */
     public function getLogStats() {
-        if (!file_exists($this->config['log_file'])) {
+        $log_file = $this->config['log_file'] ?? '../access.log';
+
+        if (!file_exists($log_file)) {
             return [
                 'total' => 0,
                 'blocked' => 0,
@@ -138,44 +145,46 @@ class LogManager {
                 'unique_ips' => 0
             ];
         }
-        
-        $lines = file($this->config['log_file'], FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+        $lines = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $total = count($lines);
         $blocked = 0;
         $redirected = 0;
         $today = 0;
-        $ips = [];
         $today_date = date('Y-m-d');
-        
+        $unique_ips = [];
+
         foreach ($lines as $line) {
             $log = $this->parseLogLine($line);
-            if (!$log) continue;
-            
-            // 统计IP
-            $ips[$log['ip']] = true;
+            if ($log) {
+                // 统计拦截和通过
+                if (stripos($log['action'], '假页面') !== false ||
+                    stripos($log['action'], 'BLOCKED') !== false ||
+                    stripos($log['action'], '机器人检测') !== false ||
+                    stripos($log['action'], '测试模式') !== false) {
+                    $blocked++;
+                } else {
+                    $redirected++;
+                }
 
-            // 统计今日访问
-            if (strpos($log['time'], $today_date) === 0) {
-                $today++;
-            }
+                // 统计今日访问
+                if (stripos($log['time'], $today_date) !== false) {
+                    $today++;
+                }
 
-            // 统计动作
-            if (strpos($log['action'], '假页面') !== false || 
-                strpos($log['action'], 'BLOCKED') !== false ||
-                strpos($log['action'], '机器人检测') !== false ||
-                strpos($log['action'], '测试模式') !== false) {
-                $blocked++;
-            } else {
-                $redirected++;
+                // 统计独立IP
+                if (!empty($log['ip']) && !in_array($log['ip'], $unique_ips)) {
+                    $unique_ips[] = $log['ip'];
+                }
             }
         }
-        
+
         return [
             'total' => $total,
             'blocked' => $blocked,
             'redirected' => $redirected,
             'today' => $today,
-            'unique_ips' => count($ips)
+            'unique_ips' => count($unique_ips)
         ];
     }
     
@@ -183,58 +192,38 @@ class LogManager {
      * 清空日志文件
      */
     public function clearLog() {
-        return file_put_contents($this->config['log_file'], '') !== false;
-    }
-    
-    /**
-     * 获取最近的访问者IP列表（用于快速拉黑）
-     */
-    public function getRecentIPs($limit = 20) {
-        $data = $this->getLogData(1, $limit);
-        $ips = [];
-        
-        foreach ($data['logs'] as $log) {
-            if (!in_array($log['ip'], $ips)) {
-                $ips[] = $log['ip'];
-            }
+        $log_file = $this->config['log_file'] ?? '../access.log';
+
+        if (file_put_contents($log_file, '') !== false) {
+            return ['success' => true, 'message' => '✅ 访问日志已清空'];
+        } else {
+            return ['success' => false, 'message' => '❌ 清空日志失败'];
         }
-        
-        return array_slice($ips, 0, $limit);
     }
-    
+
     /**
-     * 获取最近的User Agent列表（用于快速拉黑）
+     * 获取系统信息
      */
-    public function getRecentUAs($limit = 20) {
-        $data = $this->getLogData(1, $limit);
-        $uas = [];
-        
-        foreach ($data['logs'] as $log) {
-            if (!in_array($log['ua'], $uas)) {
-                $uas[] = $log['ua'];
-            }
+    public function getSystemInfo() {
+        $info = [];
+
+        // 文件状态
+        $files = [
+            'UA 黑名单' => $this->config['ua_file'] ?? 'Cloak_Data/ua_blacklist.txt',
+            'IP 黑名单' => $this->config['ip_file'] ?? 'Cloak_Data/ip_blacklist.txt',
+            '跳转地址' => $this->config['landing_file'] ?? 'Cloak_Data/real_landing_url.txt',
+            '访问日志' => $this->config['log_file'] ?? 'Cloak_Data/log.txt',
+            'API 配置' => $this->config['api_config_file'] ?? 'Cloak_Data/api_config.json'
+        ];
+
+        foreach ($files as $name => $file) {
+            $info['files'][$name] = [
+                'exists' => file_exists($file),
+                'size' => file_exists($file) ? filesize($file) : 0,
+                'modified' => file_exists($file) ? date('Y-m-d H:i:s', filemtime($file)) : '-'
+            ];
         }
-        
-        return array_slice($uas, 0, $limit);
-    }
-    
-    /**
-     * 导出日志为CSV格式
-     */
-    public function exportToCSV($filters = []) {
-        $data = $this->getLogData(1, 10000, $filters); // 导出最多10000条
-        
-        $csv = "时间,IP地址,User Agent,处理结果,访问来源\n";
-        foreach ($data['logs'] as $log) {
-            $csv .= sprintf('"%s","%s","%s","%s","%s"' . "\n",
-                str_replace('"', '""', $log['time']),
-                str_replace('"', '""', $log['ip']),
-                str_replace('"', '""', $log['ua']),
-                str_replace('"', '""', $log['action']),
-                str_replace('"', '""', $log['referer'])
-            );
-        }
-        
-        return $csv;
+
+        return $info;
     }
 }
